@@ -1,0 +1,60 @@
+# Configuration Garlic.iaas.dbz
+---
+- hosts: master
+
+  tasks:
+    - name: 1. Mise à jour des packages
+      yum: name=* state=latest
+
+    - name: 2. Installation des packages
+      yum: name={{item}} state=latest
+      with_items:
+       - git
+       - zsh
+       - net-tools
+       - epel-release
+
+    - name: 3. Récuperation d'omzsh pour iaas
+      shell: sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+      become: yes
+      become_user: iaas
+
+    - name: 4. Config du theme pour iaas
+      shell: sh -c "$(sed -i '10s/ZSH_THEME="robbyrussell"/ZSH_THEME="gentoo"/' /home/iaas/.zshrc)"
+      become: yes
+      become_user: iaas
+
+    - name: 5. Récuperation d'omzsh pour root
+      shell: sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+      become: yes
+      become_user: root
+
+    - name: 6. Config du theme pour root
+      shell: sh -c "$(sed -i '10s/ZSH_THEME="robbyrussell"/ZSH_THEME="gentoo"/' /root/.zshrc)"
+      become: yes
+      become_user: root
+
+    - name: 7. Changement du nom d'hote
+      shell: |
+      sh -c "$(> /etc/hostname)"
+      echo "garlic.iaas.dbz" > /etc/hostname
+    
+    - name: 8. Installation de Docker
+      shell: |
+        curl -fsSL https://get.docker.com/ | sh
+        usermod -aG docker iaas
+        systemctl start docker
+        systemctl enable docker
+    
+    - name: 9. Initialisation du cluster Swarm et récupération du token worker (/home/iaas/token)
+      shell: |
+        docker swarm init --advertise-addr 10.0.255.240
+        docker swarm join-token worker -q > /home/iaas/token
+
+    - name: 10. Ouverture des port du pare-feu
+      shell: |
+        firewall-cmd --zone=public --add-port=2377/tcp --permanent
+        firewall-cmd --zone=public --add-port=7946/tcp --permanent
+        firewall-cmd --zone=public --add-port=7946/udp --permanent
+        firewall-cmd --zone=public --add-port=4789/udp --permanent
+        firewall-cmd --reload   
