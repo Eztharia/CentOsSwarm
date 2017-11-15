@@ -38,30 +38,6 @@ EOM
 # Restart du service réseau
 service network restart >/dev/null
 echo " "
-[ $? -eq 0 ] && echo "Script de configuration terminé, connectez vous sur $username@ $ipadd !" || echo "Echec de configuration de l'adressage statique !"
+[ $? -eq 0 ] && echo "Script de configuration terminé, connectez vous sur root@$ipadd !" || echo "Echec de configuration de l'adressage statique !"
 echo " "
 }
-
-if [ $(id -u) -eq 0 ]; then
-	# Ajout d'utilisateur
-	read -p "Entrer le nom de l'utilisateur : " username
-	read -s -p "Entrer le mot de passe : " password
-	echo " " 
-	egrep "^$username" /etc/passwd >/dev/null
-	if [ $? -eq 0 ]; then
-		echo " "
-		echo "$username existe déjà!"
-		configStatique
-		exit 1
-	else
-		pass=$(perl -e 'print crypt($ARGV[0], "password")' $password)
-		useradd -m -p $pass $username
-		echo " "
-		[ $? -eq 0 ] && echo "L'utilisateur a bien été créé !" || echo "Echec de création de l'utilisateur !"
-		configStatique
-	fi
-else
-	echo " "
-	echo "Vous devez lancer ce script depuis l'utilisateur root"
-	exit 2
-fi
