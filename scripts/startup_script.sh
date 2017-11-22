@@ -30,8 +30,7 @@ dns="/etc/resolv.conf"
 echo " "
 /bin/cat <<EOM >$dns
 search iaas.dbz
-nameserver 8.8.8.8
-nameserver 8.8.4.4
+nameserver 10.0.255.1
 EOM
 
 # Restart du service réseau
