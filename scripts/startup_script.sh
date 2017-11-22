@@ -1,5 +1,4 @@
 #!/bin/bash
-function configStatique {
 # Configuration ip statique
 ifup ifcfg-ens33
 confip="/etc/sysconfig/network-scripts/ifcfg-ens33"
@@ -40,4 +39,3 @@ service network restart >/dev/null
 echo " "
 [ $? -eq 0 ] && echo "Script de configuration terminé, connectez vous sur root@$ipadd !" || echo "Echec de configuration de l'adressage statique !"
 echo " "
-}
