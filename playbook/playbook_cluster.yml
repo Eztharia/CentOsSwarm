@@ -13,35 +13,35 @@
         ssh_key_file: .ssh/id_rsa
        tags: generate_ssh       
    
-    - name: 0.2 - Mise à jour des packages
+    - name: 0.1 - Mise à jour des packages
       yum: name=* state=latest
       tags: update
 
-    - name: 0.4 - Récuperation d'omzsh pour iaas
+    - name: 0.2 - Récuperation d'omzsh pour iaas
       shell: sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
       become: yes
       become_user: iaas
       tags: omzsh
 
-    - name: 0.5 - Config du theme pour iaas
+    - name: 0.3 - Config du theme pour iaas
       shell: sh -c "$(sed -i '10s/ZSH_THEME="robbyrussell"/ZSH_THEME="gentoo"/' /home/iaas/.zshrc)"
       become: yes
       become_user: iaas
       tags: omzsh
 
-    - name: 0.6 - Récuperation d'omzsh pour root
+    - name: 0.4 - Récuperation d'omzsh pour root
       shell: sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
       become: yes
       become_user: root
       tags: omzsh
 
-    - name: 0.7 - Config du theme pour root
+    - name: 0.5 - Config du theme pour root
       shell: sh -c "$(sed -i '10s/ZSH_THEME="robbyrussell"/ZSH_THEME="gentoo"/' /root/.zshrc)"
       become: yes
       become_user: root
       tags: omzsh
     
-    - name: 0.8 - Installation de Docker
+    - name: 0.6 - Installation de Docker
       shell: |
         curl -fsSL https://get.docker.com/ | sh
         usermod -aG docker iaas
@@ -52,19 +52,19 @@
 - hosts: master
 
   tasks:
-    - name: 1.0 - Changement du nom d'hote garlic
+    - name: 0.7 - Changement du nom d'hote garlic
       shell: |
         sh -c "$(> /etc/hostname)"
         echo "garlic.iaas.dbz" > /etc/hostname
       tags: hostname_master
         
-    - name: 1.1 - Initialisation du cluster Swarm et récupération du token worker (/home/iaas/token)
+    - name: 0.8 - Initialisation du cluster Swarm et récupération du token worker (/home/iaas/token)
       shell: |
         docker swarm init --advertise-addr 10.0.255.245
         docker swarm join-token worker -q > /home/iaas/token
       tags: init_swarm
-      
-    - name: 1.2 - Ouverture des port du pare-feu
+
+    - name: 0.9 - Ouverture des port du pare-feu
       shell: |
         firewall-cmd --zone=public --add-port=2377/tcp --permanent
         firewall-cmd --zone=public --add-port=7946/tcp --permanent
@@ -73,7 +73,7 @@
         firewall-cmd --reload
       tags: firewall_rules
 
-    - name: 1.3 - Envoi du token au workers
+    - name: 1.0 - Envoi du token au workers
       shell: |
         ssh-copy-id -o "StrictHostKeyChecking no" -f -i /home/iaas/.ssh/id_rsa.pub iaas@10.0.255.246
         scp /home/iaas/token iaas@10.0.255.246:/home/iaas/token
