@@ -1,0 +1,48 @@
+# Configuration Test
+---
+- hosts: test
+
+  tasks:
+    - user:
+        name: iaas
+        password: iabHW9z84FPuI
+        uid: 1000
+        group: wheel
+        generate_ssh_key: yes
+        ssh_key_bits: 4096
+        ssh_key_type: rsa
+        ssh_key_file: .ssh/id_rsa
+
+    - name: 0.6 - Installation de Docker
+      shell: |
+        curl -fsSL https://get.docker.com/ | sh
+        usermod -aG docker iaas
+        systemctl start docker
+        systemctl enable docker
+      tags: docker_install
+
+- hosts: master
+
+  tasks:
+    - name: 1.0 - Envoi du token au workers test
+      shell: |
+        ssh-copy-id -o "StrictHostKeyChecking no" -f -i /home/iaas/.ssh/id_rsa.pub iaas@10.0.255.250
+        scp /home/iaas/token iaas@10.0.255.250:/home/iaas/token
+      tags: send_token
+
+- hosts: test
+
+  tasks:
+    - name: 2.0 - Changement du nom test
+      shell: |
+        sh -c "$(> /etc/hostname)"
+        echo "test.iaas.dbz" > /etc/hostname
+      tags: hostname_test
+
+    - name: 2.1. Récupération du token worker et join le cluster swarm (/home/iaas/token)
+      shell: |
+        token=$(cat /home/iaas/token)
+        docker swarm join --token $token 10.0.255.240:2377
+      become: yes
+      become_user: iaas
+      tags: join_worker
