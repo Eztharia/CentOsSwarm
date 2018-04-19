@@ -1,28 +1,5 @@
 # Configuration Garlic.iaas.dbz
 ---
-- hosts: all
-
-  tasks:
-    - user:
-        name: iaas
-        password: iabHW9z84FPuI
-        uid: 1000
-        group: wheel
-        generate_ssh_key: yes
-        ssh_key_bits: 4096
-        ssh_key_type: rsa
-        ssh_key_file: .ssh/id_rsa
-
-    - name: 0.2 - Mise à jour des packages
-      yum: name=* state=latest
-
-    - name: 0.6 - Installation de Docker
-      shell: |
-        curl -fsSL https://get.docker.com/ | sh
-        usermod -aG docker iaas
-        systemctl start docker
-        systemctl enable docker
-      tags: docker_install
 
 - hosts: master
 
@@ -32,26 +9,6 @@
         sh -c "$(> /etc/hostname)"
         echo "garlic.iaas.dbz" > /etc/hostname
       tags: hostname_master
-   
-    - name: Verification de l'installation de Docker
-      shell: docker ps
-      register: docker_result
-      failed_when: "'FAILED' in docker_result.stderr"
-      tags: docker_check
-      
-    - name: be sure ntp is installed
-      yum:
-        name: ntp
-        state: installed
-      tags: ntp
-
-    - name: Installation de Docker
-      yum: state=present name=docker
-      when:
-          - ansible_distribution == "CentOS"
-          - ansible_distribution_major_version == "7"
-          - docker_result|failed
-      tags: docker_check
 
     - name: 0.8 - Initialisation du cluster Swarm et récupération du token worker (/home/iaas/token)
       shell: |
@@ -123,19 +80,32 @@
         if grep -q "192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0" /etc/fstab; then echo "Ligne existante"; else sh -c "echo '192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0' >> /etc/fstab"; fi
       tags: nfs_node2
 
-# - hosts: master
+# Partie Lancement des services
+- hosts: master
 
-#   tasks:
-#     - name: 4.1 - Lancement des services
-#       shell: |
-#         usermod -a -G docker iaas
-#         docker pull registry
-#         docker run -d -p 5000:5000 --restart=always --name registry registry:2
-#       tags: registry
-#grep "192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0" /etc/fstab || echo 'include "192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0"' >> /etc/fstab
+  tasks:
+    - name: 4.0 - Installation du registry docker
+      shell: docker service create --name registry --mount type=bind,source=/home/iaas/docker_volume,destination=/var/lib/registry --publish published=5000,target=5000 registry:2
+      tags: registry
+
+    - name: 4.1 - Lancement de la stack de supervision
+      shell: |
+        git clone https://github.com/stefanprodan/swarmprom.git /home/iaas/swarmprom
+        ADMIN_USER=admin \
+        ADMIN_PASSWORD=admin \
+        docker stack deploy -c docker-compose.yml mon
+      tags: swarmprom
+
+    - name: 4.0 - Installation du registry docker
+      shell: docker service create --name registry --mount type=bind,source=/home/iaas/docker_volume,destination=/var/lib/registry --publish published=5000,target=5000 registry:2
+      tags: registry
+
+    - name: 4.0 - Installation du registry docker
+      shell: docker service create --name registry --mount type=bind,source=/home/iaas/docker_volume,destination=/var/lib/registry --publish published=5000,target=5000 registry:2
+      tags: registry    
 
 
-#if grep -q "192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0" /etc/fstab; then echo "Ligne existante"; else sh -c "echo '192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0' >> /etc/fstab"; fi
+# Package nessessaire sur tout les host
 # nfs-utils
 # sshpass
 
