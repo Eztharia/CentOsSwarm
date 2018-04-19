@@ -1,0 +1,7 @@
+- name: 9.1. Récupération du token worker et join le cluster swarm (/home/iaas/token)
+  shell: |
+    token=$(cat /home/iaas/token)
+    docker swarm join --token $token 192.168.1.240:2377
+  become: yes
+  become_user: iaas
+  tags: join_worker

@@ -1,0 +1,7 @@
+#     - name: 6.1 - Lancement de la stack de supervision
+#       shell: |
+#         git clone https://github.com/stefanprodan/swarmprom.git /home/iaas/swarmprom
+#         ADMIN_USER=admin \
+#         ADMIN_PASSWORD=admin \
+#         docker stack deploy -c docker-compose.yml mon
+#       tags: swarmprom

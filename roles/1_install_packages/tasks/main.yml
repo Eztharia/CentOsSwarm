@@ -1,0 +1,34 @@
+# Yum update packages
+- name: 1 - Mise à jour des packages Yum
+  yum: name=* state=latest update_cache=yes
+  when: ansible_distribution == "CentOS"
+
+# Yum install packages
+- name: 2 - Instalation des des pakages Yum
+  yum: name={{ item }} state=installed
+  with_items:
+    - epel-release
+    - net-tools
+    - nfs-utils
+    - git
+    - sshpass
+    - epel-release
+    - curl
+    - nano
+    - htop
+
+#Install Docker
+- name: 3 - Verification de l'installation de Docker
+  shell: docker ps
+  register: docker_result
+  failed_when: "'FAILED' in docker_result.stderr"
+
+- name: 4 - Installation de Docker
+  yum: state=present name=docker
+  when:
+      - ansible_distribution == "CentOS"
+      - ansible_distribution_major_version == "7"
+      - docker_result|failed
+
+- name: 8 - Restart and enable Docker
+  service: state=restarted enabled=yes name=docker

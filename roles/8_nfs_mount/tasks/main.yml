@@ -1,0 +1,4 @@
+- name: 1 - Ajout du montage nfs /etc/fstab
+  shell: |
+    if grep -q "192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0" /etc/fstab; then echo "Ligne existante"; else sh -c "echo '192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0' >> /etc/fstab"; fi
+  tags: nfs_node1

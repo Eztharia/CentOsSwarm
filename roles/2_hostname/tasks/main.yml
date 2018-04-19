@@ -1,0 +1,4 @@
+- name: Changement du nom d'hote
+  shell: |
+    sh -c "$(> /etc/hostname)"
+    echo "{{ inventory_hostname }}" > /etc/hostname

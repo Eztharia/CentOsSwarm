@@ -1,0 +1,20 @@
+- name: 1 - Création d'un utilisateur
+  user:
+    name: "{{user}}"
+    password: "{{password}}"
+    group: wheel
+    generate_ssh_key: yes
+    ssh_key_bits: 4096
+    ssh_key_type: rsa
+    ssh_key_file: .ssh/id_rsa
+
+- name: 2 - Recuperation des groupes
+  shell: /usr/bin/getent group | awk -F":" '{print $1}'
+  register: etc_groups
+
+- name: 3 - Ajout de l'utilisateur aux groupes
+  user: name={{ user }} groups={{ item }} append=yes
+  when: "'{{ item }}' in etc_groups.stdout_lines"
+  with_items: 
+      - docker
+      - wheel

@@ -1,0 +1,3 @@
+- name: 7.1 - Installation du registry docker
+  shell: docker service create --name registry --mount type=bind,source=/home/iaas/docker_volume,destination=/var/lib/registry --publish published=5000,target=5000 registry:2
+  tags: registry

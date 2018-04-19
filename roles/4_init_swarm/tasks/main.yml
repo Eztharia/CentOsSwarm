@@ -1,0 +1,22 @@
+- name: 4.1 - Initialisation du cluster Swarm et récupération des tokens worker / manager
+  shell: |
+    docker swarm init --advertise-addr {{ ansible_default_ipv4.address }}
+    docker swarm join-token worker -q > /home/iaas/token
+
+- name: 4.2 - Envoi du token au workers
+  shell: |
+    sshpass -p "P@ssw0rd" ssh-copy-id -o "StrictHostKeyChecking no" -f -i /home/iaas/.ssh/id_rsa.pub iaas@192.168.1.241
+    sshpass -p "P@ssw0rd" ssh-copy-id -o "StrictHostKeyChecking no" -f -i /home/iaas/.ssh/id_rsa.pub iaas@192.168.1.242
+    cat /home/iaas/token | ssh iaas@192.168.1.241 "cat > /home/iaas/token"
+    cat /home/iaas/token | ssh iaas@192.168.1.242 "cat > /home/iaas/token"
+  become: yes
+  become_user: iaas
+  tags: send_token
+
+# - name: Recuperation du token manager
+#   shell: docker swarm join-token -q manager
+#   register: managerToken
+
+# - name: Recuperation du token worker
+#   shell: docker swarm join-token -q worker
+#   register: workerToken
