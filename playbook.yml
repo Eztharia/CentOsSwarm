@@ -1,19 +1,19 @@
 # Configuration infrastructure iaas.dbz
 ---
-# - hosts: all
-#   roles:
-#     - 0_epel-release
-#     - 1_install_packages
-#     - 2_hostname
-#     - 3_user
-#     - 8_nfs_mount
+- hosts: all
+  roles:
+    - 0_epel-release
+    - 1_install_packages
+    - 2_hostname
+    - 3_user
+    - 8_nfs_mount
 
 - hosts: master
   roles:
      - 4_init_swarm
-    #  - 5_firewall_settings
-    #  - 6_swarm_prom
-    #  - 7_registry
+     - 5_firewall_settings
+     - 6_swarm_prom
+     - 7_registry
 
 - hosts: nodes
   roles:
