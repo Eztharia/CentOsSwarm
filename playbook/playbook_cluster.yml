@@ -13,6 +13,9 @@
         ssh_key_type: rsa
         ssh_key_file: .ssh/id_rsa
 
+    - name: 0.2 - Mise à jour des packages
+      yum: name=* state=latest
+
     - name: 0.6 - Installation de Docker
       shell: |
         curl -fsSL https://get.docker.com/ | sh
@@ -29,10 +32,30 @@
         sh -c "$(> /etc/hostname)"
         echo "garlic.iaas.dbz" > /etc/hostname
       tags: hostname_master
-        
+   
+    - name: Verification de l'installation de Docker
+      shell: docker ps
+      register: docker_result
+      failed_when: "'FAILED' in docker_result.stderr"
+      tags: docker_check
+      
+    - name: be sure ntp is installed
+      yum:
+        name: ntp
+        state: installed
+      tags: ntp
+
+    - name: Installation de Docker
+      yum: state=present name=docker
+      when:
+          - ansible_distribution == "CentOS"
+          - ansible_distribution_major_version == "7"
+          - docker_result|failed
+      tags: docker_check
+
     - name: 0.8 - Initialisation du cluster Swarm et récupération du token worker (/home/iaas/token)
       shell: |
-        docker swarm init --advertise-addr 10.0.255.240
+        docker swarm init --advertise-addr 192.168.1.240
         docker swarm join-token worker -q > /home/iaas/token
       tags: init_swarm
 
@@ -48,12 +71,12 @@
 
     - name: 1.0 - Envoi du token au workers
       shell: |
-        ssh-copy-id -o "StrictHostKeyChecking no" -f -i /home/iaas/.ssh/id_rsa.pub iaas@10.0.255.241
-        scp /home/iaas/token iaas@10.0.255.241:/home/iaas/token
-        ssh-copy-id -o "StrictHostKeyChecking no" -f -i /home/iaas/.ssh/id_rsa.pub iaas@10.0.255.242
-        scp /home/iaas/token iaas@10.0.255.242:/home/iaas/token
+        sshpass -p "P@ssw0rd" ssh-copy-id -o "StrictHostKeyChecking no" -f -i /home/iaas/.ssh/id_rsa.pub iaas@192.168.1.241
+        sshpass -p "P@ssw0rd" ssh-copy-id -o "StrictHostKeyChecking no" -f -i /home/iaas/.ssh/id_rsa.pub iaas@192.168.1.242
+        cat /home/iaas/token | ssh iaas@192.168.1.241 "cat > /home/iaas/token"
+        cat /home/iaas/token | ssh iaas@192.168.1.242 "cat > /home/iaas/token"
       become: yes
-      become_user: root
+      become_user: iaas
       tags: send_token
 
 - hosts: nodes[0]
@@ -63,15 +86,20 @@
       shell: |
         sh -c "$(> /etc/hostname)"
         echo "janemba.iaas.dbz" > /etc/hostname
-      tags: hostname_node1  
+      tags: hostname_node1
 
     - name: 2.1. Récupération du token worker et join le cluster swarm (/home/iaas/token)
       shell: |
         token=$(cat /home/iaas/token)
-        docker swarm join --token $token 10.0.255.240:2377
+        docker swarm join --token $token 192.168.1.240:2377
       become: yes
       become_user: iaas
-      tags: join_worker_1
+      tags: join_worker
+
+    - name: 2.2 - Ajout du montage nfs /etc/fstab pour Janemba
+      shell: |
+        if grep -q "192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0" /etc/fstab; then echo "Ligne existante"; else sh -c "echo '192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0' >> /etc/fstab"; fi
+      tags: nfs_node1
 
 - hosts: nodes[1]
 
@@ -85,7 +113,29 @@
     - name: 3.1. Récupération du token worker et join le cluster swarm (/home/iaas/token)
       shell: |
         token=$(cat /home/iaas/token)
-        docker swarm join --token $token 10.0.255.240:2377
+        docker swarm join --token $token 192.168.1.240:2377
       become: yes
       become_user: iaas
-      tags: join_worker_2
+      tags: join_worker
+
+    - name: 3.2 - Ajout du montage nfs /etc/fstab pour Dabra
+      shell: |
+        if grep -q "192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0" /etc/fstab; then echo "Ligne existante"; else sh -c "echo '192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0' >> /etc/fstab"; fi
+      tags: nfs_node2
+
+# - hosts: master
+
+#   tasks:
+#     - name: 4.1 - Lancement des services
+#       shell: |
+#         usermod -a -G docker iaas
+#         docker pull registry
+#         docker run -d -p 5000:5000 --restart=always --name registry registry:2
+#       tags: registry
+#grep "192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0" /etc/fstab || echo 'include "192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0"' >> /etc/fstab
+
+
+#if grep -q "192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0" /etc/fstab; then echo "Ligne existante"; else sh -c "echo '192.168.1.245:/export/DockerVolume    /mnt/nfs/docker_volume  nfs defaults 0 0' >> /etc/fstab"; fi
+# nfs-utils
+# sshpass
+
