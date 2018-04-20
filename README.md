@@ -18,7 +18,7 @@ Download and Unzip the package which contain the following files :
 
 * **roles/** - All roles for configure the servers
 
-* **scripts/** - Folder which contain ks.cfg
+* **scripts/** - Folder which contain ks.cfg & a bash script for configure server static ip.
 
 # How it works ! 
 
