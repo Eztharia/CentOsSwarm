@@ -4,7 +4,7 @@
 
  # Prerequisites 
     
-* [Ansible](http://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
+* [Ansible](http://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) + [Ansible Toolbox](https://github.com/larsks/ansible-toolbox)
     
 * [CentOs7 - Iso](http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1708.iso)
 
