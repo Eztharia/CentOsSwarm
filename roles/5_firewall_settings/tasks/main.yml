@@ -1,17 +1,17 @@
-- name: 1 - Enable firewalld
+- name: 5.1 - Enable firewalld
   service: name=firewalld state=started enabled=yes
 
-- name: Allow 2377/tcp
+- name: 5.2 - Allow 2377/tcp
   command: firewall-cmd --zone=public --add-port=2377/tcp --permanent
 
-- name: Allow 7946/tcp
+- name: 5.3 - Allow 7946/tcp
   command: firewall-cmd --zone=public --add-port=7946/tcp --permanent
 
-- name: 4- Allow 7946/Uudp
+- name: 5.4 - Allow 7946/Uudp
   command: firewall-cmd --zone=public --add-port=7946/udp --permanent
 
-- name: 5 - Allow 4789/udp
+- name: 5.5 - Allow 4789/udp
   command: firewall-cmd --zone=public --add-port=4789/udp --permanent
 
-- name: 6 - Restart firewalld
+- name: 5.6 - Restart firewalld
   service: name=firewalld state=restarted

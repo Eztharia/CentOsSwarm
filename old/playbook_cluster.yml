@@ -1,31 +1,5 @@
 # Configuration Garlic.iaas.dbz
 ---
-# - hosts: all
-#   roles:
-#     # - create_user
-#      - install_packages
-
-- hosts: all
-  roles:
-     - hostname
-    #  - init_swarm
-    #  - firewall_settings
-    #  - send_token
-    #  - swarm_prom
-    #  - registry
-
-# - hosts: nodes[0]
-#   roles:
-#      - hostname
-#      - join_swarm
-#      - add_nfs
-
-# - hosts: nodes[1]
-#   roles:
-#      - hostname
-#      - join_swarm
-#      - add_nfs
-
 # - hosts: master
 
 #   tasks:
