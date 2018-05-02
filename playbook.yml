@@ -2,22 +2,22 @@
 ---
 - hosts: all
   roles:
-    - 0_epel-release
-    - 1_install_packages
-    - 2_hostname
-    - 3_user
-    - 8_nfs_mount
+    # - 0_epel-release
+    # - 1_install_packages
+    # - 2_hostname
+    # - 3_user
+    # - 8_nfs_mount
 
 - hosts: master
   roles:
-     - 4_init_swarm
-     - 5_firewall_settings
-     - 6_swarm_prom
-     - 7_registry
-     - 10_portainer
+    #  - 4_init_swarm
+    #  - 5_firewall_settings
+    #  - 6_swarm_prom
+    #  - 7_registry
+     - 10_deploy_portainer
 
 - hosts: nodes
   roles:
-     - 9_join_swarm
+    #  - 9_join_swarm
 
 
